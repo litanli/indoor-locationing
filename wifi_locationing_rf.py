@@ -1,18 +1,19 @@
-# Title: wifi_locationing_rf
-
 #################
 # Project Summary
 #################
 """
-Datasets:    trainingData.csv, validationData.csv
-Scenario:    Determine the feasbility of using Wi-Fi fingerprints for doing
-             indoor locationing.
+Datasets:    UJIIndoorLoc_trainingData.csv (training/validation set), 
+             UNJIndoorLoc_validationData.csv (test set)
+Scenario:    Determine the feasbility of using Wi-Fi fingerprints indoor 
+             smartphone locationing.
 Goal:        Benchmark 3 indoor locationing solutions using the UJIIndoorLoc 
              dataset from http://archive.ics.uci.edu/ml/datasets/UJIIndoorLoc.
-             In this script, we will use a solution using the random forest
-             classifier.
+             In this script, we'll use a random forest classifier.
              
-Conclusion:  Final Model: "RandomForestClassifier_model.sav"
+Conclusion:  Please read my "Evaluate Techniques for Wi-Fi Locationing" technical 
+             report for full details of methodology and conclusions.
+             
+             Final Model: "RandomForestClassifier_model.sav"
              criterion: gini
              max_depth: not limited
              max_features: sqrt (The number of features to consider when 
@@ -20,20 +21,21 @@ Conclusion:  Final Model: "RandomForestClassifier_model.sav"
              n_estimators: 60 (number of trees in the forest)
              
              Tuning insights:
-             See "tuning.csv" for results of all hyperparameter combinations 
-             tried. For this dataset, the Gini splitting criterion generall 
+             See "tuning_rf.csv" for results of all hyperparameter combinations 
+             tried. For this dataset, the Gini splitting criterion generally 
              performed better. Limiting the maximum depth of trees hindered
              performance. Using the square root of the number of features as
              the number of features to consider at each split was better than 
              log2 and any percentage between 30 to 90% of the total number of 
              features. More trees generally reduced overfitting, but increased
-             memory usage during training considerably.
+             memory usage during training considerably. Due to limited PC 
+             memory, the number of trees was limited to 60 trees in the best 
+             model.
              
-             Reason: gives good performance on the training set and the cross
-             validation. There's slight overfitting, suggested by the 11% gap 
-             between training set and cross validation performance. 
-             Cross-validation performance improved with higher number of trees,
-             but due to limited PC memory was limited to 60 trees.
+             Reason: gives good cross-validation scores. There's slight 
+             overfitting, suggested by the 11% gap between the cross-validation 
+             scores and the average training fold scores, which can be improved
+             if not limited by PC ram.
              
              Training set performance (average of k-folds): 
              accuracy 0.968 kappa 0.968
@@ -86,9 +88,13 @@ test_set = pd.read_csv("UJIIndoorLoc_validationData.csv")
 ################
 
 #------------------------ training/validation set ----------------------------#
-train_set.loc[train_set["BUILDINGID"] == 0]["FLOOR"].unique() # building 0 has 4 floors
-train_set.loc[train_set["BUILDINGID"] == 1]["FLOOR"].unique() # building 1 has 4 floors
-train_set.loc[train_set["BUILDINGID"] == 2]["FLOOR"].unique() # building 2 has 5 floors
+
+# building 0 has 4 floors
+# building 1 has 4 floors
+# building 2 has 5 floors
+train_set.loc[train_set["BUILDINGID"] == 0]["FLOOR"].unique() 
+train_set.loc[train_set["BUILDINGID"] == 1]["FLOOR"].unique() 
+train_set.loc[train_set["BUILDINGID"] == 2]["FLOOR"].unique() 
 
 
 # plots
@@ -103,8 +109,8 @@ plt.hist(train_set.loc[train_set["BUILDINGID"] == 0]["USERID"])
 plt.hist(train_set.loc[train_set["BUILDINGID"] == 0]["PHONEID"])
 # Almost all fingerprints were collected right outside the door to each 
 # fingerprint's SPACEID location.
-# Building 0 fingerprints were collected by just 2 devices (and 2 separate users).
-# Not a lot of variety in different devices.
+# Building 0 fingerprints were collected by just 2 devices (and 2 separate 
+# users). Not a lot of variety in different devices.
 
 plt.hist(train_set.loc[train_set["BUILDINGID"] == 1]["LONGITUDE"])
 plt.hist(train_set.loc[train_set["BUILDINGID"] == 1]["LATITUDE"])
@@ -147,9 +153,12 @@ pd.isnull(train_set).values.any()
 
 #-------------------------------- test set -----------------------------------#
 
-test_set.loc[test_set["BUILDINGID"] == 0]["FLOOR"].unique() # building 0 has 4 floors
-test_set.loc[test_set["BUILDINGID"] == 1]["FLOOR"].unique() # building 1 has 4 floors
-test_set.loc[test_set["BUILDINGID"] == 2]["FLOOR"].unique() # building 2 has 5 floors
+# building 0 has 4 floors
+# building 1 has 4 floors
+# building 2 has 5 floors
+test_set.loc[test_set["BUILDINGID"] == 0]["FLOOR"].unique() 
+test_set.loc[test_set["BUILDINGID"] == 1]["FLOOR"].unique() 
+test_set.loc[test_set["BUILDINGID"] == 2]["FLOOR"].unique() 
 
 
 # plots
@@ -178,6 +187,7 @@ plt.hist(test_set["FLOOR"])
 plt.hist(test_set["BUILDINGID"])
 plt.hist(test_set["PHONEID"])
 
+
 # check for missing values
 pd.isnull(test_set)
 pd.isnull(test_set).values.any()
@@ -195,7 +205,9 @@ pd.isnull(test_set).values.any()
 # New represenation: 1 to 105 (weak to strong), 0 for no signal.
 train_set.iloc[:, 0:520].min().min() # minimum WAP is -104 dBm
 train_set_P = train_set.copy()
-train_set_P.iloc[:, 0:520] = np.where(train_set_P.iloc[:, 0:520] <= 0, train_set_P.iloc[:, 0:520] + 105, train_set_P.iloc[:, 0:520] - 100) 
+train_set_P.iloc[:, 0:520] = np.where(train_set_P.iloc[:, 0:520] <= 0, 
+                train_set_P.iloc[:, 0:520] + 105, 
+                train_set_P.iloc[:, 0:520] - 100) 
 
 # Feature Scaling - do not center - destroys sparse structure of
 # this data. There's also no need to normalize the WAPs, since they're all on
@@ -203,11 +215,8 @@ train_set_P.iloc[:, 0:520] = np.where(train_set_P.iloc[:, 0:520] <= 0, train_set
 
 # Create a single label for the model to predict. FLOOR, LATITUDE, FLOOR, and 
 # BUILDINGID pinpoints the exact location of a user inside a building. Stack 
-# train set and test set first before assigning unique location so that any 
-# observations whose labels in the test set that are the same as in the train
-# set will be assigned the same UNIQUELOCATION value. Further, this avoids 
-# UNIQUELOCATION values resetting as when it's applied to train set and test set 
-# separatey. 
+# train set and test set first before assigning unique location so that 
+# identical locations are assigned the same UNIQUELOCATION value.
 combined = pd.concat([train_set_P, test_set]) # stack vertically
 combined = combined.assign(UNIQUELOCATION = (combined['LONGITUDE'].astype(str) + '_' + combined['LATITUDE'].astype(str) + '_' + combined['FLOOR'].astype(str) + '_' + combined['BUILDINGID'].astype(str)).astype('category').cat.codes)
 len(combined["UNIQUELOCATION"].unique()) # 1995 unique locations
@@ -254,20 +263,20 @@ def save_data(dataframe, filename):
     else:
         print('WARNING: This file already exists.')
         
-save_data(X_train, 'X_train.csv')
-save_data(y_train, 'y_train.csv')
-save_data(X_test, 'X_test.csv')
-save_data(y_test, 'y_test.csv')
+save_data(X_train, 'X_train_rf.csv')
+save_data(y_train, 'y_train_rf.csv')
+save_data(X_test, 'X_test_rf.csv')
+save_data(y_test, 'y_test_rf.csv')
 
 #--- load data ---#
-#X_train = pd.read_csv('X_train.csv', index_col = 0)
-#y_train = pd.read_csv('y_train.csv', index_col = 0)
-#X_test = pd.read_csv('X_test.csv', index_col = 0)
-#y_test = pd.read_csv('y_test.csv', index_col = 0)
+#X_train = pd.read_csv('X_train_rf.csv', index_col = 0)
+#y_train = pd.read_csv('y_train_rf.csv', index_col = 0)
+#X_test = pd.read_csv('X_test_rf.csv', index_col = 0)
+#y_test = pd.read_csv('y_test_rf.csv', index_col = 0)
 
 
 #-- delete unneeded datasets created during preprocessing to free up memory --#
-del train_set; del train_set_P; del train_set_PU; del test_set; del test_set_U; del test_set_PU; del combined
+del train_set, train_set_P, train_set_PU, test_set, test_set_U, test_set_PU, combined
 
 
 #################
@@ -276,8 +285,9 @@ del train_set; del train_set_P; del train_set_PU; del test_set; del test_set_U; 
 
 #----------------------------- Random Forest ---------------------------------#
 # Using cross-validation, train best random forest model to predict 
-# UNIQUELOCATION. For cross-validation and training set performance metrics,
-# we will simply use the accuracy and kappa of predicting UNIQUELOCATION values.
+# UNIQUELOCATION. We report the accuracy and kappa on UNIQUELOCATION predictions
+# for cross-validation and on the training set. We report location error metrics
+# on the test set.
 
 if __name__ == '__main__':
     
@@ -290,7 +300,7 @@ if __name__ == '__main__':
     # 'parameters' can be a list of dictionaries for more specificity in 
     # hyperparamter combinations to attempt.
     # hyperparameters: http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
-    # for a list of hyperparameters tried, see "tuning.csv"
+    # for a list of hyperparameters tried, see "tuning_rf.csv"
     hyperparameters = {'criterion': ['gini'], 
                   'max_depth': [None], 
                   'max_features': ['sqrt'],
@@ -301,86 +311,69 @@ if __name__ == '__main__':
     scoring = {'accuracy': 'accuracy',
                'kappa': make_scorer(cohen_kappa_score)}
     
-    grid_search = GridSearchCV(estimator = classifier,
-                               param_grid = hyperparameters,
-                               scoring = scoring,
-                               cv = 10,
-                               refit = 'accuracy', # what best model is based on, and specifies that the best model will be refitted on the whole training set
-                               return_train_score = True,
-                               n_jobs = -1) # parallel processing
+    grid = GridSearchCV(estimator = classifier,
+                        param_grid = hyperparameters,
+                        scoring = scoring,
+                        cv = 10,
+                        refit = 'accuracy', # what best model is based on, and specifies that the best model will be refitted on the whole training set
+                        return_train_score = True,
+                        n_jobs = -1) # parallel processing
     
     tic = time.time()
-    grid_search = grid_search.fit(X_train, y_train.iloc[:, 9].squeeze()) # squeeze() makes sure y_train is a Series, as recommended now and required in upcoming sklearn versions.
+    grid_result = grid.fit(X_train, y_train.iloc[:, 9].squeeze()) # squeeze() makes sure y_train is a Series, as recommended now and required in upcoming sklearn versions.
     toc = time.time()
     run_time = (toc - tic)/60
     import winsound; winsound.Beep(frequency = 1500, duration = 2000) 
     
 #--- cross validation metrics and training set metrics (average of folds) ----#
-cv_results_ = pd.DataFrame.from_dict(grid_search.cv_results_) 
+cv_results_ = pd.DataFrame.from_dict(grid_result.cv_results_) 
 cv_results_.insert(loc = 0, column = 'Model', 
                    value = ['RandomForestClassifier']*cv_results_.shape[0])
 cv_results_.insert(loc = 60, column = 'mean train - cross_val accuracy', 
                    value = cv_results_['mean_train_accuracy'] - cv_results_['mean_test_accuracy'])
 cv_results_.insert(loc = 61, column = 'mean train - cross_val kappa', 
                    value = cv_results_['mean_train_kappa'] - cv_results_['mean_test_kappa'])
-with open('tuning.csv', 'a') as f:
+with open('tuning_rf.csv', 'a') as f:
     cv_results_.to_csv(f, header = True)
 
-grid_search.best_estimator_
-grid_search.best_score_
-grid_search.best_params_
-
-
-# confusion matrix 
-#from sklearn.metrics import confusion_matrix
-#cm = confusion_matrix(y_test, y_pred)
-
-
-# train final model after exploring hyperparameters 
-#final_classifier = RandomForestClassifier(criterion = 'gini',
-#                                          max_features = 'sqrt',
-#                                          n_estimators = 40,
-#                                          random_state = 0) # set seed for reproducibility
-#final_classifier.fit(X_train, y_train)
+grid_result.best_estimator_
+grid_result.best_score_
+grid_result.best_params_
 
 
 #--- save best model ---#
 
 def save_model(model, model_name):
-    model_name_present = glob.glob(model_name) # boolean, same model name already present?
+    model_name_present = glob.glob(model_name) # boolean
     if not model_name_present:
-        pickle.dump(grid_search, open(model_name, 'wb'))
+        pickle.dump(grid_result, open(model_name, 'wb'))
     else:
         print('WARNING: This file already exists.')
 
-save_model(grid_search, 'RandomForestClassifier_model.sav')
+save_model(grid_result, 'RandomForestClassifier_model.sav')
 
 #--- load model ---#
-grid_search = pickle.load(open('RandomForestClassifier_model.sav', 'rb'))
+grid_result = pickle.load(open('RandomForestClassifier_model.sav', 'rb'))
 
 
 #--- test set metrics ---#
-y_pred = grid_search.predict(X_test)
+y_pred = grid_result.predict(X_test)
 np.mean(y_pred == y_test.iloc[:, 9])
 
-# prediction accuracy on UNIQUELOCATION for the test set is very low because 
+# Prediction accuracy on UNIQUELOCATION for the test set is very low because 
 # each UNIQUELOCATION value depends on the LONGTITUDE, LATITUDE, FLOOR, and
-# BUILDINGID, making the values quite unique, in spirit with the variable name.
-# UJIIndoorLoc_validation.csv (which the test set is from) contains many examples
-# taken by users and phones that have not participated in generating 
-# UJIIndoorLoc_train.csv (training set). That alone may cause the Wi-Fi finger-
-# print to UNIQUELOCATION mapping quite difficult capture. However, this is not
-# an issue, since what we're really interested in is how close is our predicted
-# position to the ground truth, and what is accuracy for predicting the 
-# building number and the floor.
-
-# Convert predicted UNIQUELOCATIONS on the test set to LONGITUDE, LATITUDE, 
-# FLOOR, and BUILDINGID. 
-# Report the following metrics for position predictions:
-# Calculate the euclidean distances between the predicted and ground truth 
-# positions. Calculate the mean positional error and the 25th, 50th, 75th, 
-# 95th, 100th (worst) percentiles of the positional errors. Calculate the 
-# hitrate for BUILDINGID and FLOOR.
+# BUILDINGID, making the values quite unique. UJIIndoorLoc_validation.csv 
+# (from which the test set came from) contains examples taken by users and 
+# phones that did not participate in generating UJIIndoorLoc_train.csv 
+# (training set). That alone may cause the Wi-Fi fingerprint-to-UNIQUELOCATION 
+# mapping quite difficult to capture. However, since what we're really 
+# interested in is how close our predicted positions are to the ground truth, 
+# let's convert the predicted UNIQUELOCATIONS on the test set back to its
+# associated LONGITUDE, LATITUDE, FLOOR, and BUILDINGID. Then, report the 
+# following metrics for position predictions: Euclidean distances between the 
+# predicted and ground truth positions. Mean positional error and the 25th, 50th, 75th, 
+# 95th, 100th (worst) percentiles of the positional errors. The hitrate for 
+# BUILDINGID and FLOOR.
 
 
 y_test_pos = y_test.iloc[:, 0:2].values 
@@ -409,8 +402,8 @@ def euclidean(y_test_pos, y_pred_pos):
     Arguments:
     y_test_pos -- test set positions represented by numpy array of shape 
                   (m_test, 2)
-    y_pred_pos -- predicted test set position represented by numpy array of shape
-                  (m_test, 2)
+    y_pred_pos -- predicted test set position represented by numpy array of 
+                  shape (m_test, 2)
     
     Returns:
     D_error -- prediction errors between test set positions and predicted test 
@@ -421,7 +414,9 @@ def euclidean(y_test_pos, y_pred_pos):
     
     return D_error
 
-D_error = euclidean(y_test_pos, y_pred_pos) # position errors for each test set example, in order as they appear 
+# position errors for each test set example, in order as they appear
+D_error = euclidean(y_test_pos, y_pred_pos)
+# sorted   
 sorted_D_error = sorted(D_error)
 
 m_test = y_test.shape[0]
@@ -433,10 +428,3 @@ percentile_95th = sorted_D_error[math.ceil(m_test*0.95) - 1] # meters
 percentile_100th = sorted_D_error[math.ceil(m_test*1.00) - 1] # meters
 building_hitrate = np.mean(y_test_building == y_pred_building)
 floor_hitrate = np.mean(y_test_floor == y_pred_floor)
-
-
-##################
-# Predict new data
-##################
-
-# N/A
