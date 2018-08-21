@@ -4,6 +4,7 @@ Indoor locationing using Wi-Fi fingerprints, machine learning, and deep learning
 Evaluated data and trained and tuned three models (random forest, k-NN, and neural network) in Python (Sci-kitlearn, Keras) to predict smartphone user locations in the UJIIndoorLoc indoor locationing dataset, achieving comparable results on the test set to those reported by teams who participated in the 2015 EvAAL-ETRI competition. The competition was a part of the 6th International Conference on Indoor Positioning and Indoor Navigation.
 
 Link to dataset: https://archive.ics.uci.edu/ml/datasets/ujiindoorloc
+
 The dataset is described in Torres-Sospedra et al. (2014) and the competition in Torres-Sospedrea et al. (2017).
 Note: I did not attend the competition, but compared my results to theirs.
 
