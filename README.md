@@ -6,9 +6,11 @@ Evaluated data and trained and tuned three models (random forest, k-NN, and neur
 Link to dataset: https://archive.ics.uci.edu/ml/datasets/ujiindoorloc
 
 The dataset is described in Torres-Sospedra et al. (2014) and the competition in Torres-Sospedrea et al. (2017).
+
 Note: I did not attend the competition, but compared my results to theirs.
 
 References
+
 Torres-Sospedra, J., Montoliu, R., Martínez-Usó, A., Avariento, J. P., Arnau, T. 
      J., Benedito-Bordonau, M., & Huerta, J. (2014). UJIIndoorLoc: A new 
      multi-building and multi-floor database for WLAN fingerprint-based indoor 
