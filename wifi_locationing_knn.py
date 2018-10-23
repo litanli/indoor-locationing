@@ -13,7 +13,7 @@ Goal:        Benchmark 3 indoor locationing solutions using the UJIIndoorLoc
 Conclusion:  Please read my "Evaluate Techniques for Wi-Fi Locationing" technical 
              report for full details of methodology and conclusions.
              
-             Final Model: "KNeighborsClassifier_model.sav"
+             Tuned knn: "KNeighborsClassifier_model.sav"
              metric: manhattan
              n_neighbors: 1
              

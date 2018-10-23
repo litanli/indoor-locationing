@@ -13,7 +13,7 @@ Goal:        Benchmark 3 indoor locationing solutions using the UJIIndoorLoc
 Conclusion:  Please read my "Evaluate Techniques for Wi-Fi Locationing" technical 
              report for full details of methodology and conclusions.
              
-             Final Model: "RandomForestClassifier_model.sav"
+             Tuned random forest: "RandomForestClassifier_model.sav"
              criterion: gini
              max_depth: not limited
              max_features: sqrt (The number of features to consider when 

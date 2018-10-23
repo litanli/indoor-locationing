@@ -13,7 +13,7 @@ Goal:        Benchmark 3 indoor locationing solutions using the UJIIndoorLoc
 Conclusion:  Please read my "Evaluate Techniques for Wi-Fi Locationing" technical 
              report for full details of methodology and conclusions.
              
-             Final Model: "ann_model.h5"
+             Tuned ann: "ann_model.h5"
              epochs: 100
              batch_size: 800
              hidden_layers: 1
